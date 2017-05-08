@@ -160,6 +160,7 @@ for i in range(n_rows):
         ax.xaxis.set_visible(False)
         ax.yaxis.set_visible(False)
         ax.imshow(w[i*n_rows + j].reshape(28, 28))
+plt.tight_layout()
 w_fig.show(0)
 
 # quick function for looking at reconstructed images after training is done
