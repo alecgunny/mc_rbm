@@ -6,6 +6,7 @@ driver.py trains a Restricted Boltzmann Machine autoencoder on the MNIST dataset
 
 The reparameterization works by sampling a random normal variable $\xi \sim \mathcal{N}(), 1)$ and adding a constant $\mu$ such that $P(\xi + \mu > 0) = p(h_i = 1) = p$, where $h_i$ is the $i$th element of the hidden state and $p$ is the probability computed by the model. The appropriate $\mu$ is computed from the Q-function of a gaussian distribution with mean $\mu$ and variance 1 and is equal to $-\sqrt{2}*\textrm{erf}^{-1}(1-2p)$.  Denoting $x = \xi + \mu$, this is transformed into binary units by $h_i = \frac{x + \abs{x}}{2\abs{x}}$.
 
-To run with standard parameters, just run python driver.py from the command line.  Alternatively, if you run the script inside an ipython console with run driver.py, you can use the plot_sample function at the end to visualize reconstructed images against their originals and see the model in action.
+To run with standard parameters, open an ipython console and run `run driver.py`. After the script finishes and the model has trained, use the `plot_sample` function to see the autoencoder in action by viewing reconstructions against their originals (some examples shown below). The command line arguments are handled by argparse, so run `run driver.py -h` to see what parameters you can play with.
 
+## Weight matrix columns reshaped as 28x28 images
 <img src='learned_weights.png'></img>
