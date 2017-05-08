@@ -167,7 +167,12 @@ w_fig.show(0)
 def plot_sample(i, split='valid'):
     fig = plt.figure()
     ax_left = fig.add_subplot(121)
+    ax_left.xaxis.set_visible(False)
+    ax_left.yaxis.set_visible(False)
+
     ax_rite = fig.add_subplot(122)
+    ax_rite.xaxis.set_visible(False)
+    ax_rite.yaxis.set_visible(False)
 
     x, pred = loop_params[split]['X'], predictions[split]
 
@@ -177,4 +182,7 @@ def plot_sample(i, split='valid'):
     ax_rite.imshow(pred[i].reshape(28, 28))
     ax_rite.set_title('Reconstruction')
 
+    plt.tight_layout()
     fig.show(0)
+
+    return fig
