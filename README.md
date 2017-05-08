@@ -11,7 +11,7 @@ To run with standard parameters, open an ipython console and run `run driver.py`
 ## Weight matrix columns reshaped as 28x28 images
 <img src='learned_weights.png'></img>
 
-##Originals vs. Reconstrutction
+## Originals vs. Reconstrutction
 <img src='0.png'></img>
 <img src='1.png'></img>
 <img src='3.png'></img>
