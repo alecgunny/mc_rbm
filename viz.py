@@ -59,3 +59,25 @@ class WeightPlotter:
         ffmpeg_args = ['-nostats', '-loglevel', 'panic', '-hide_banner', '-y']
         subprocess.call(['ffmpeg', '-i', './imgs/weights/epoch%04d.png', './imgs/weights.avi'] + ffmpeg_args)
         subprocess.call(['ffmpeg', '-i', './imgs/weights.avi', '-pix_fmt', 'rgb8', '-t', '3', './imgs/weights.gif'] + ffmpeg_args)
+
+
+def plot_sample(x, pred):
+    fig = plt.figure()
+    ax_left = fig.add_subplot(121)
+    ax_left.xaxis.set_visible(False)
+    ax_left.yaxis.set_visible(False)
+
+    ax_rite = fig.add_subplot(122)
+    ax_rite.xaxis.set_visible(False)
+    ax_rite.yaxis.set_visible(False)
+
+    ax_left.imshow(x.reshape(28, 28))
+    ax_left.set_title('Original')
+
+    ax_rite.imshow(pred.reshape(28, 28))
+    ax_rite.set_title('Reconstruction')
+
+    plt.tight_layout()
+    fig.show(0)
+
+    return fig

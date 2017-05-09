@@ -14,7 +14,7 @@ from keras.datasets import mnist
 
 sys.dont_write_bytecode = True
 from parser import parser
-from viz import WeightPlotter
+from viz import WeightPlotter, plot_sample
 args, _ = parser.parse_known_args()
 
 h_dim         = args.h_dim
@@ -142,27 +142,3 @@ for split, split_params in loop_params.items():
 ax.legend()
 fig.suptitle('Model loss by epoch')
 fig.savefig('./imgs/loss.png')
-
-# quick function for looking at reconstructed images after training is done
-def plot_sample(i, split='valid'):
-    fig = plt.figure()
-    ax_left = fig.add_subplot(121)
-    ax_left.xaxis.set_visible(False)
-    ax_left.yaxis.set_visible(False)
-
-    ax_rite = fig.add_subplot(122)
-    ax_rite.xaxis.set_visible(False)
-    ax_rite.yaxis.set_visible(False)
-
-    x, pred = loop_params[split]['X'], predictions[split]
-
-    ax_left.imshow(x[i].reshape(28, 28))
-    ax_left.set_title('Original')
-
-    ax_rite.imshow(pred[i].reshape(28, 28))
-    ax_rite.set_title('Reconstruction')
-
-    plt.tight_layout()
-    fig.show(0)
-
-    return fig
