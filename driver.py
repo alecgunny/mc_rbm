@@ -3,11 +3,7 @@ import cPickle as pickle
 import sys
 import numpy as np
 from collections import OrderedDict
-import subprocess
 import os
-import multiprocessing as mp
-import Queue
-import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 
 np.random.seed = 0 # set the seed for keras for repeatability
@@ -18,6 +14,7 @@ from keras.datasets import mnist
 
 sys.dont_write_bytecode = True
 from parser import parser
+from viz import WeightPlotter
 args, _ = parser.parse_known_args()
 
 h_dim         = args.h_dim
@@ -65,46 +62,6 @@ def predict_on_dataset(X):
     return predictions
 
 
-def plot_and_save_weights(q):
-    n_cols = int(np.round(np.sqrt(h_dim)))
-    n_rows = n_cols if n_cols**2 >= h_dim else n_cols + 1
-
-    fig = plt.figure(figsize=(8,8))
-    gs = gridspec.GridSpec(n_rows, n_cols)
-    gs.update(wspace=0.015, hspace=0.015)
-    axes = []
-    for i in range(n_rows):
-        for j in range(n_cols):
-            idx = i*n_rows + j
-            if idx >= h_dim:
-                break
-            axes.append(fig.add_subplot(gs[idx]))
-
-    output_dir = './imgs/weights/'
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-
-    glyphs = []
-    while True:
-        try:
-            W, epoch = q.get(timeout=0.5)
-            if epoch is None:
-                break
-            if epoch == 0:
-                for w, ax in zip(W, axes):
-                    glyphs.append(ax.imshow(w.reshape(28,28)))
-                    ax.xaxis.set_visible(False)
-                    ax.yaxis.set_visible(False)
-            else:
-                for w, glyph, in zip(W, glyphs):
-                    glyph.set_data(w.reshape(28,28))
-                    glyph.set_clim(vmin=w.min(), vmax=w.max())
-                    plt.draw()
-            epoch = str(epoch).zfill(4)
-            fig.savefig(os.path.join(output_dir, 'epoch{}.png'.format(epoch)), bbox_inches='tight', pad_inches=0)
-        except Queue.Empty:
-            continue
-
 # load and preprocess data
 (X_train, y_train), (X_valid, y_valid) = mnist.load_data()
 X_train, X_valid = preprocess(X_train), preprocess(X_valid)
@@ -149,12 +106,9 @@ get_batch   = lambda x, i: [x[batch_slice(i)]]
 loop_params = OrderedDict([('train', {'X': X_train, 'func': train_func, 'loss': []}),
                            ('valid', {'X': X_valid, 'func': valid_func, 'loss': []})])
 
-plt.ioff()
-q = mp.Queue()
-p = mp.Process(target=plot_and_save_weights, args=(q,))
-p.start()
+plotter = WeightPlotter(W)
 for epoch in range(epochs):
-    q.put([W.get_value().T, epoch])
+    plotter.plot(epoch)
     try:
         print("Epoch {}/{}".format(epoch + 1, epochs))
         for split, split_params in loop_params.items():
@@ -170,19 +124,10 @@ for epoch in range(epochs):
 
     except KeyboardInterrupt:
         break
+plotter.plot(epoch + 1)
+plotter.convert()
 
-print("Done training, waiting for figures to generate...")
-q.put([W.get_value().T, epoch + 1])
-q.put([None, None])
-p.join()
-plt.ion()
-
-print("Figures generated, writing gif of weight development")
-ffmpeg_args = ['-nostats', '-loglevel', 'panic', '-hide_banner', '-y']
-subprocess.call(['ffmpeg', '-i', './imgs/weights/epoch%04d.png', './imgs/weights.avi'] + ffmpeg_args)
-subprocess.call(['ffmpeg', '-i', './imgs/weights.avi', '-pix_fmt', 'rgb8', '-t', '3', './imgs/weights.gif'] + ffmpeg_args)
-
-print("loading in parameters from best validation epoch and predicting on validation set")
+print("Done training, loading in parameters from best validation epoch and predicting on validation set")
 # load in the best parameters to compute predictions
 with open('best_weights.pkl', 'r') as f:
     params_to_load = pickle.load(f)
@@ -196,7 +141,7 @@ for split, split_params in loop_params.items():
     ax.plot(split_params['loss'], label=split)
 ax.legend()
 fig.suptitle('Model loss by epoch')
-fig.show(0)
+fig.savefig('./imgs/loss.png')
 
 # quick function for looking at reconstructed images after training is done
 def plot_sample(i, split='valid'):
